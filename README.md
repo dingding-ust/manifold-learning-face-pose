@@ -17,8 +17,8 @@ The methods compared include:
 
 ## Project Structure
 
+```
 Project/
-│
 ├── data/                  # (Likely contains face.mat dataset, downloaded by io_utils.py)
 ├── figs/                  # (Contains exported figures like sample faces, embeddings, metric plots)
 ├── notebooks/             # Jupyter notebooks for analysis workflow
@@ -41,8 +41,12 @@ Project/
 │   ├── io_utils.py        # Data loading and utility functions
 │   └── metrics.py         # Functions for evaluation metrics (TAE, T, C)
 │
+├── .DS_Store              # macOS system file (should be in .gitignore)
+├── .gitignore             # Git ignore file
+├── LICENSE                # License file
+├── README.md              # This README file
 └── requirements.txt       # Project dependencies
-
+```
 
 ## Dataset
 
