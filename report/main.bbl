@@ -1,0 +1,74 @@
+\begin{thebibliography}{13}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Belkin and Niyogi(2003)]{Belkin2003}
+Mikhail Belkin and Partha Niyogi.
+\newblock Laplacian eigenmaps for dimensionality reduction and data representation.
+\newblock \emph{Neural computation}, 15\penalty0 (6):\penalty0 1373--1396, 2003.
+
+\bibitem[Donoho and Grimes(2003)]{Donoho2003}
+David~L Donoho and Carrie Grimes.
+\newblock Hessian eigenmaps: Locally linear embedding techniques for high-dimensional data.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 100\penalty0 (10):\penalty0 5591--5596, 2003.
+
+\bibitem[Hotelling(1933)]{Hotelling1933}
+Harold Hotelling.
+\newblock Analysis of a complex of statistical variables into principal components.
+\newblock \emph{Journal of educational psychology}, 24\penalty0 (6):\penalty0 417, 1933.
+
+\bibitem[Liu et~al.(2023)Liu, Wang, and Han]{CSIC5011_RefReport}
+D.~Liu, M.~Wang, and X.~Han.
+\newblock Csic 5011 final project: Order the faces via manifold learning.
+\newblock Course project report, HKUST, 2023.
+\newblock unpublished.
+
+\bibitem[Pedregosa et~al.(2011)Pedregosa, Varoquaux, Gramfort, Michel, Thirion, Grisel, et~al.]{scikit-learn}
+Fabian Pedregosa, Ga{\"e}l Varoquaux, Alexandre Gramfort, Vincent Michel, Bertrand Thirion, Olivier Grisel, et~al.
+\newblock Scikit-learn: Machine learning in python.
+\newblock \emph{Journal of machine learning research}, 12\penalty0 (Oct):\penalty0 2825--2830, 2011.
+
+\bibitem[Roweis and Saul(2000)]{Roweis2000}
+Sam~T Roweis and Lawrence~K Saul.
+\newblock Nonlinear dimensionality reduction by locally linear embedding.
+\newblock \emph{Science}, 290\penalty0 (5500):\penalty0 2323--2326, 2000.
+
+\bibitem[Tenenbaum et~al.(2000)Tenenbaum, De~Silva, and Langford]{Tenenbaum2000}
+Joshua~B Tenenbaum, Vin De~Silva, and John~C Langford.
+\newblock A global geometric framework for nonlinear dimensionality reduction.
+\newblock \emph{Science}, 290\penalty0 (5500):\penalty0 2319--2323, 2000.
+
+\bibitem[Van~der Maaten and Hinton(2008)]{vanDerMaaten2008}
+Laurens Van~der Maaten and Geoffrey Hinton.
+\newblock Visualizing data using t-sne.
+\newblock \emph{Journal of machine learning research}, 9\penalty0 (11), 2008.
+
+\bibitem[Van~der Maaten et~al.(2009)Van~der Maaten, Postma, and Van~den Herik]{vanDerMaaten2009}
+Laurens Van~der Maaten, Eric Postma, and Jaap Van~den Herik.
+\newblock Dimensionality reduction: a comparative review.
+\newblock \emph{Journal of Machine Learning Research}, 10\penalty0 (Nov):\penalty0 66--71, 2009.
+
+\bibitem[Venna and Kaski(2001)]{Venna2001}
+Jarkko Venna and Samuel Kaski.
+\newblock Neighborhood preservation in nonlinear projection methods: An experimental study.
+\newblock In \emph{International Conference on Artificial Neural Networks}, pages 485--491, Berlin, Heidelberg, 2001. Springer.
+
+\bibitem[Young and Householder(1941)]{Young1941_MDS}
+Gale Young and Alston~S Householder.
+\newblock Discussion of a set of points in terms of their mutual distances.
+\newblock \emph{Psychometrika}, 6\penalty0 (3):\penalty0 19--22, 1941.
+
+\bibitem[Zhang and Wang(2007)]{Zhang2007}
+Zhenyue Zhang and Jing Wang.
+\newblock Mlle: Modified locally linear embedding using multiple weights.
+\newblock In \emph{Advances in neural information processing systems}, volume~19, 2007.
+
+\bibitem[Zhang and Zha(2004)]{Zhang2004}
+Zhenyue Zhang and Hongyuan Zha.
+\newblock Principal manifolds and nonlinear dimensionality reduction via tangent space alignment.
+\newblock \emph{SIAM journal on scientific computing}, 26\penalty0 (1):\penalty0 313--338, 2004.
+
+\end{thebibliography}

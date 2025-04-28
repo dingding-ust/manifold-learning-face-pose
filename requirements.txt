@@ -1,0 +1,18 @@
+# Core scientific stack
+numpy==1.26.4
+scipy==1.12.0
+pandas==2.2.3                  # Added based on environment
+scikit-learn==1.3.2            # PCA / MDS / Isomap / LLE / t-SNE
+scikit-learn-extra==0.3.0      # Diffusion Maps (sklearn-extra)
+
+# Visualization & I/O
+matplotlib==3.8.4
+imageio==2.34.1
+imageio-ffmpeg==0.4.9          # GIF / MP4 writer
+requests==2.31.0               # HTTP downloads
+tqdm==4.66.4
+seaborn==0.13.2                # Updated version from 0.13.1
+
+# Notebook interaction
+jupyterlab==4.1.5
+ipykernel==6.29.4

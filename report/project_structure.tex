@@ -1,0 +1,395 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 项目结构文档 - 流形学习方法比较
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass{article}
+
+% 基本包
+\usepackage[UTF8]{ctex} % 中文支持
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{booktabs}
+
+% 代码样式设置
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.95}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codepurple},
+    stringstyle=\color{codegreen},
+    basicstyle=\ttfamily\small,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\title{流形学习方法比较项目\\结构与代码说明}
+\author{丁丁}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{项目概述}
+
+本项目比较了九种降维方法在人脸姿态排序任务上的性能。具体来说，我们使用了一个包含33张同一个人不同视角的灰度图像的数据集，尝试恢复图像的1维旋转流形，并根据重建的流形对人脸姿态进行排序。
+
+项目中实现和评估了以下降维方法：
+\begin{itemize}
+    \item 线性方法：主成分分析 (PCA)、多维缩放 (MDS)
+    \item 非线性流形方法：Isomap、局部线性嵌入 (LLE)、局部切空间对齐 (LTSA)、改进的LLE (MLLE)、Hessian LLE (HLLE)、谱嵌入 (Spectral Embedding)、t-分布随机邻域嵌入 (t-SNE)
+\end{itemize}
+
+使用总绝对误差 (TAE)、可信度 (Trustworthiness) 和连续性 (Continuity) 作为评估指标。
+
+\section{文件结构}
+
+项目的文件结构如下：
+
+\begin{lstlisting}[language=bash]
+Project/
+├── data/
+│   └── face.mat         # 包含33张人脸图像的MATLAB数据文件
+├── code/
+│   ├── main.ipynb       # 主Jupyter笔记本，包含所有代码和可视化
+│   ├── utils.py         # 工具函数，包括度量计算和数据处理
+│   └── visualization.py # 可视化相关函数
+├── results/
+│   ├── figures/         # 生成的图表，如散点图、参数调优图等
+│   └── metrics/         # 保存的评估指标结果
+└── report/
+    ├── main.tex         # 报告的主LaTeX文件
+    ├── references.bib   # 参考文献BibTeX文件
+    └── neurips_2019.sty # 报告使用的样式文件
+\end{lstlisting}
+
+\section{代码内容详解}
+
+\subsection{数据加载与预处理}
+
+数据加载部分从MATLAB文件中读取人脸图像数据并进行预处理：
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import scipy.io as sio
+from sklearn.preprocessing import StandardScaler
+
+# 加载数据
+data = sio.loadmat('data/face.mat')
+faces = data['images']  # 形状为 [92, 112, 33]
+
+# 将图像展平为向量
+n_samples = faces.shape[2]
+n_pixels = faces.shape[0] * faces.shape[1]
+X = np.zeros((n_samples, n_pixels))
+for i in range(n_samples):
+    X[i] = faces[:, :, i].reshape(n_pixels)
+
+# 标准化数据
+X_scaled = StandardScaler().fit_transform(X)
+\end{lstlisting}
+
+\subsection{流形学习方法实现}
+
+使用scikit-learn库实现各种降维方法并进行参数调优：
+
+\begin{lstlisting}[language=Python]
+from sklearn.decomposition import PCA
+from sklearn.manifold import (
+    MDS, Isomap, LocallyLinearEmbedding, 
+    SpectralEmbedding, TSNE
+)
+
+# 定义要测试的方法
+methods = {
+    'PCA': PCA(n_components=2),
+    'MDS': MDS(n_components=2, metric=True, n_jobs=-1),
+    'Isomap': Isomap(n_components=2, n_neighbors=5),
+    'LLE': LocallyLinearEmbedding(
+        n_components=2, n_neighbors=5, method='standard'),
+    'LTSA': LocallyLinearEmbedding(
+        n_components=2, n_neighbors=10, method='ltsa'),
+    'MLLE': LocallyLinearEmbedding(
+        n_components=2, n_neighbors=12, method='modified'),
+    'HLLE': LocallyLinearEmbedding(
+        n_components=2, n_neighbors=10, method='hessian'),
+    'Spectral': SpectralEmbedding(
+        n_components=2, n_neighbors=5),
+    't-SNE': TSNE(
+        n_components=2, perplexity=20, random_state=42)
+}
+
+# 使用最优参数对所有方法进行嵌入
+embeddings = {}
+for name, method in methods.items():
+    embeddings[name] = method.fit_transform(X_scaled)
+\end{lstlisting}
+
+\subsection{参数调优}
+
+对于基于邻域的方法，针对邻居数量k进行调优，对于t-SNE，针对复杂度参数p进行调优：
+
+\begin{lstlisting}[language=Python]
+# 邻居数调优
+k_range = [3, 4, 5, 6, 7, 8, 9, 10, 12]
+k_methods = ['Isomap', 'LLE', 'LTSA', 'MLLE', 'HLLE', 'Spectral']
+
+k_results = {}
+for method_name in k_methods:
+    k_results[method_name] = {'TAE': [], 'T': [], 'C': []}
+    for k in k_range:
+        # HLLE需要k > 5才能进行2D嵌入
+        if method_name == 'HLLE' and k <= 5:
+            continue
+            
+        # 创建方法实例并拟合
+        if method_name == 'Isomap':
+            method = Isomap(n_components=2, n_neighbors=k)
+        elif method_name in ['LLE', 'LTSA', 'MLLE', 'HLLE']:
+            method_type = {
+                'LLE': 'standard', 
+                'LTSA': 'ltsa', 
+                'MLLE': 'modified', 
+                'HLLE': 'hessian'
+            }[method_name]
+            method = LocallyLinearEmbedding(
+                n_components=2, n_neighbors=k, method=method_type)
+        elif method_name == 'Spectral':
+            method = SpectralEmbedding(n_components=2, n_neighbors=k)
+            
+        # 计算嵌入和度量
+        Y = method.fit_transform(X_scaled)
+        tae = compute_tae(Y, ground_truth)
+        t, c = compute_trustworthiness_continuity(X_scaled, Y, k=5)
+        
+        # 存储结果
+        k_results[method_name]['TAE'].append(tae)
+        k_results[method_name]['T'].append(t)
+        k_results[method_name]['C'].append(c)
+
+# t-SNE复杂度调优
+p_range = [5, 8, 10, 13, 15, 18, 20, 25, 30]
+p_results = {'TAE': [], 'T': [], 'C': []}
+
+for p in p_range:
+    tsne = TSNE(n_components=2, perplexity=p, random_state=42)
+    Y = tsne.fit_transform(X_scaled)
+    
+    tae = compute_tae(Y, ground_truth)
+    t, c = compute_trustworthiness_continuity(X_scaled, Y, k=5)
+    
+    p_results['TAE'].append(tae)
+    p_results['T'].append(t)
+    p_results['C'].append(c)
+\end{lstlisting}
+
+\subsection{评估指标计算}
+
+计算用于评估方法性能的三个关键度量：
+
+\begin{lstlisting}[language=Python]
+def compute_tae(Y, ground_truth):
+    """计算总绝对误差（Total Absolute Error）"""
+    # 基于第一个嵌入维度排序
+    dim1_order = np.argsort(Y[:, 0])
+    
+    # 计算与ground truth的绝对差之和
+    tae_asc = sum(abs(np.argsort(dim1_order) - np.argsort(ground_truth)))
+    
+    # 考虑降序情况
+    tae_desc = sum(abs(np.argsort(dim1_order[::-1]) - np.argsort(ground_truth)))
+    
+    # 返回较小值
+    return min(tae_asc, tae_desc)
+
+def compute_trustworthiness_continuity(X, Y, k=5):
+    """计算可信度（Trustworthiness）和连续性（Continuity）"""
+    from sklearn.neighbors import NearestNeighbors
+    
+    n = X.shape[0]
+    
+    # 找出在原始空间的k近邻
+    nbrs_X = NearestNeighbors(n_neighbors=k+1).fit(X)
+    indices_X = nbrs_X.kneighbors(X, return_distance=False)
+    # 移除自身
+    indices_X = indices_X[:, 1:]
+    
+    # 找出在嵌入空间的k近邻
+    nbrs_Y = NearestNeighbors(n_neighbors=k+1).fit(Y)
+    indices_Y = nbrs_Y.kneighbors(Y, return_distance=False)
+    # 移除自身
+    indices_Y = indices_Y[:, 1:]
+    
+    # 计算Trustworthiness (T)
+    T = 0
+    for i in range(n):
+        for j in indices_Y[i]:
+            if j not in indices_X[i]:
+                # 找出j在原始空间k近邻排名
+                rank = np.where(np.argsort(np.linalg.norm(X - X[i], axis=1))==j)[0][0]
+                T += (rank - k)
+    
+    T = 1 - 2/(n*k*(2*n - 3*k - 1)) * T
+    
+    # 计算Continuity (C)
+    C = 0
+    for i in range(n):
+        for j in indices_X[i]:
+            if j not in indices_Y[i]:
+                # 找出j在嵌入空间k近邻排名
+                rank = np.where(np.argsort(np.linalg.norm(Y - Y[i], axis=1))==j)[0][0]
+                C += (rank - k)
+    
+    C = 1 - 2/(n*k*(2*n - 3*k - 1)) * C
+    
+    return T, C
+\end{lstlisting}
+
+\subsection{可视化代码}
+
+结果可视化主要包括散点图和带人脸图像的嵌入结果：
+
+\begin{lstlisting}[language=Python]
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 散点图可视化
+def plot_embeddings(embeddings, figsize=(15, 12)):
+    n_methods = len(embeddings)
+    fig, axes = plt.subplots(3, 3, figsize=figsize)
+    axes = axes.flatten()
+    
+    for i, (name, Y) in enumerate(embeddings.items()):
+        ax = axes[i]
+        scatter = ax.scatter(Y[:, 0], Y[:, 1], c=range(Y.shape[0]), 
+                  cmap='viridis', s=50)
+        ax.set_title(name)
+        ax.set_xticks([])
+        ax.set_yticks([])
+    
+    plt.tight_layout()
+    return fig
+
+# 带人脸图像的嵌入可视化
+def plot_embedding_with_faces(Y, faces, title, figsize=(10, 10)):
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # 散点图
+    ax.scatter(Y[:, 0], Y[:, 1], alpha=0)
+    
+    # 添加小图像
+    for i in range(Y.shape[0]):
+        face_img = faces[:, :, i]
+        # 创建小图像
+        img = ax.imshow(face_img, extent=(Y[i, 0]-0.05, Y[i, 0]+0.05, 
+                                        Y[i, 1]-0.05, Y[i, 1]+0.05),
+                      aspect='auto', cmap='gray', alpha=0.9)
+    
+    ax.set_title(title)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    
+    return fig
+
+# 参数调优可视化
+def plot_tuning_results(k_results, k_range, figsize=(15, 10)):
+    methods = list(k_results.keys())
+    metrics = ['TAE', 'T', 'C']
+    
+    fig, axes = plt.subplots(len(metrics), 1, figsize=figsize)
+    
+    for i, metric in enumerate(metrics):
+        ax = axes[i]
+        for method in methods:
+            # 某些方法在特定k值下可能没有结果
+            valid_k = []
+            valid_vals = []
+            
+            for j, k in enumerate(k_range):
+                if j < len(k_results[method][metric]):
+                    valid_k.append(k)
+                    valid_vals.append(k_results[method][metric][j])
+            
+            ax.plot(valid_k, valid_vals, marker='o', label=method)
+        
+        ax.set_xlabel('Number of neighbors (k)')
+        ax.set_ylabel(metric)
+        ax.set_xticks(k_range)
+        ax.legend()
+        
+        if metric == 'TAE':
+            ax.set_title('Total Absolute Error (lower is better)')
+        else:
+            ax.set_title(f'{"Trustworthiness" if metric=="T" else "Continuity"} (higher is better)')
+    
+    plt.tight_layout()
+    return fig
+\end{lstlisting}
+
+\section{实验结果汇总}
+
+实验结果展示了各种方法的性能比较：
+
+\begin{table}[h]
+  \centering
+  \caption{各方法的最优参数和评估指标}
+  \begin{tabular}{lccc}
+    \toprule
+    方法 & 最优参数 & TAE (min) & Trustworthiness \& Continuity \\
+    \midrule
+    Isomap & k=5 & 6 & 高 (>0.98) \\
+    LLE & k=5 & 14 & 高 (>0.96) \\
+    Spectral & k=5 & 14 & 高 (>0.95) \\
+    LTSA & k=10 & 16 & 中高 (>0.93) \\
+    HLLE & k=10 & 16 & 中高 (>0.93) \\
+    MLLE & k=12 & 22 & 高 (>0.94) \\
+    PCA & - & 30 & 高 (>0.97) \\
+    t-SNE & p=20 & 90 & 高 (>0.97) \\
+    MDS & - & 350 & 高 (>0.98) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{结论}
+
+本项目的主要发现包括：
+
+\begin{enumerate}
+    \item Isomap (k=5) 在人脸姿态排序任务中表现最佳，TAE最低。
+    \item 非线性流形学习方法（Isomap, LLE, Spectral, HLLE, LTSA）明显优于线性方法（PCA, MDS）和t-SNE。
+    \item 对于基于邻域的方法，最优邻居数通常在5-10之间，这表明保持局部结构对于恢复旋转流形至关重要。
+    \item 大多数方法都能保持良好的局部结构（高T\&C值），即使全局排序性能（TAE）差异较大。
+    \item t-SNE专注于局部结构保持，不适合恢复全局排序关系。
+\end{enumerate}
+
+\section{运行环境}
+
+项目使用以下软件环境开发和测试：
+
+\begin{itemize}
+    \item Python 3.9
+    \item NumPy 1.24.3
+    \item SciPy 1.11.3
+    \item scikit-learn 1.3.2
+    \item Matplotlib 3.8.0
+    \item Seaborn 0.12.2
+    \item Pandas 2.1.1
+\end{itemize}
+
+\end{document} 
